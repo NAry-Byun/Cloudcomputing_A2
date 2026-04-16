@@ -41,16 +41,16 @@ def wait_active(name):
 USERS_TABLE = "Users"
  
 SAMPLE_USERS = [
-    {"username":"alice",  "email":"alice@example.com",  "password_hash":"Test123",  "full_name":"Alice Johnson",  "created_at":"2025-01-10","last_login":"2026-04-15","is_active":True},
-    {"username":"bob",    "email":"bob@example.com",    "password_hash":"Test123",  "full_name":"Bob Smith",      "created_at":"2025-02-14","last_login":"2026-04-14","is_active":True},
-    {"username":"carol",  "email":"carol@example.com",  "password_hash":"Test123",  "full_name":"Carol White",    "created_at":"2025-03-01","last_login":"2026-04-10","is_active":True},
-    {"username":"dave",   "email":"dave@example.com",   "password_hash":"Test123",  "full_name":"Dave Brown",     "created_at":"2025-03-20","last_login":"2026-03-28","is_active":False},
-    {"username":"eve",    "email":"eve@example.com",    "password_hash":"Test123",  "full_name":"Eve Davis",      "created_at":"2025-04-05","last_login":"2026-04-16","is_active":True},
-    {"username":"frank",  "email":"frank@example.com",  "password_hash":"Test123",  "full_name":"Frank Miller",   "created_at":"2025-05-12","last_login":"2026-04-12","is_active":True},
-    {"username":"grace",  "email":"grace@example.com",  "password_hash":"Test123",  "full_name":"Grace Wilson",   "created_at":"2025-06-18","last_login":"2026-04-01","is_active":True},
-    {"username":"henry",  "email":"henry@example.com",  "password_hash":"Test123",  "full_name":"Henry Moore",    "created_at":"2025-07-22","last_login":"2026-03-15","is_active":False},
-    {"username":"iris",   "email":"iris@example.com",   "password_hash":"Test123",  "full_name":"Iris Taylor",    "created_at":"2025-08-30","last_login":"2026-04-13","is_active":True},
-    {"username":"james",  "email":"james@example.com",  "password_hash":"Test123",  "full_name":"James Anderson", "created_at":"2025-09-05","last_login":"2026-04-11","is_active":True},
+    {"username":"alice",  "email":"s1234567@student.rmit.edu.au",  "password_hash":"Test123",  "full_name":"Alice Johnson",  "created_at":"2025-01-10","last_login":"2026-04-15","is_active":True},
+    {"username":"bob",    "email":"s1234568@student.rmit.edu.au",    "password_hash":"Test123",  "full_name":"Bob Smith",      "created_at":"2025-02-14","last_login":"2026-04-14","is_active":True},
+    {"username":"carol",  "email":"s1234569@student.rmit.edu.au",  "password_hash":"Test123",  "full_name":"Carol White",    "created_at":"2025-03-01","last_login":"2026-04-10","is_active":True},
+    {"username":"dave",   "email":"s1234560student.rmit.edu.au",   "password_hash":"Test123",  "full_name":"Dave Brown",     "created_at":"2025-03-20","last_login":"2026-03-28","is_active":False},
+    {"username":"eve",    "email":"s1234561@student.rmit.edu.au",    "password_hash":"Test123",  "full_name":"Eve Davis",      "created_at":"2025-04-05","last_login":"2026-04-16","is_active":True},
+    {"username":"frank",  "email":"s1234562@student.rmit.edu.au",  "password_hash":"Test123",  "full_name":"Frank Miller",   "created_at":"2025-05-12","last_login":"2026-04-12","is_active":True},
+    {"username":"grace",  "email":"s1234563@student.rmit.edu.au",  "password_hash":"Test123",  "full_name":"Grace Wilson",   "created_at":"2025-06-18","last_login":"2026-04-01","is_active":True},
+    {"username":"henry",  "email":"s1234564@student.rmit.edu.au",  "password_hash":"Test123",  "full_name":"Henry Moore",    "created_at":"2025-07-22","last_login":"2026-03-15","is_active":False},
+    {"username":"iris",   "email":"s1234565@student.rmit.edu.au",   "password_hash":"Test123",  "full_name":"Iris Taylor",    "created_at":"2025-08-30","last_login":"2026-04-13","is_active":True},
+    {"username":"james",  "email":"s1234566@student.rmit.edu.au",  "password_hash":"Test123",  "full_name":"James Anderson", "created_at":"2025-09-05","last_login":"2026-04-11","is_active":True},
 ]
  
 def create_users_table():
