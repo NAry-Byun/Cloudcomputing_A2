@@ -11,7 +11,8 @@ main page
 
 2. upload frontend file and image script in S3( 2 different S3 bucket need to create)
 
-3. set up Dynamo DB
+3. set up Dynamo DB and rest API
+Step 1 — REST API creation-> AWS Console → API Gateway → Create API → REST API → Build
 
 
 4. Ec2 instance - Security Group: HTTP(80), SSH(22)
