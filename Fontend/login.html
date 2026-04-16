@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Musicly — Sign In</title>
+  <link rel="stylesheet" href="css/shared.css">
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- Logo -->
+    <div class="logo">
+      <div class="logo-mark">♪</div>
+      <h1>Musicly</h1>
+      <p>Your personal music library</p>
+    </div>
+
+    <!-- Card -->
+    <div class="card">
+      <div class="card-title">Welcome back</div>
+      <div class="card-sub">Sign in to your account</div>
+
+      <div id="msg" class="msg"></div>
+
+      <div class="form-group">
+        <label class="flabel">Email</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+      </div>
+
+      <div class="form-group">
+        <label class="flabel">Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+      </div>
+
+      <button class="btn btn-full" id="loginBtn" onclick="handleLogin()">
+        Sign In
+      </button>
+    </div>
+
+    <!-- Link to register -->
+    <div class="bottom-link">
+      Don't have an account? <a href="register.html">Register here</a>
+    </div>
+
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>

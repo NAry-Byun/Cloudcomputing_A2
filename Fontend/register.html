@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Musicly — Register</title>
+  <link rel="stylesheet" href="css/shared.css">
+  <link rel="stylesheet" href="css/register.css">
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- Logo -->
+    <div class="logo">
+      <div class="logo-mark">♪</div>
+      <h1>Musicly</h1>
+      <p>Create your free account</p>
+    </div>
+
+    <!-- Card -->
+    <div class="card">
+      <div class="card-title">Create account</div>
+      <div class="card-sub">Join Musicly and build your library</div>
+
+      <div id="msg" class="msg"></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="flabel">Username *</label>
+          <input type="text" id="regUsername" placeholder="musiclover99" maxlength="30">
+        </div>
+        <div class="form-group">
+          <label class="flabel">Full Name</label>
+          <input type="text" id="regFullName" placeholder="Jane Smith">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="flabel">Email Address *</label>
+        <input type="email" id="regEmail" placeholder="you@example.com" autocomplete="email">
+      </div>
+
+      <div class="form-group">
+        <label class="flabel">Password *</label>
+        <input type="password" id="regPassword" placeholder="••••••••" autocomplete="new-password">
+        <div class="strength-wrap">
+          <div class="strength-bar-track">
+            <div class="strength-bar" id="strengthBar"></div>
+          </div>
+          <div class="strength-text" id="strengthText"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="flabel">Confirm Password *</label>
+        <input type="password" id="regConfirm" placeholder="••••••••" autocomplete="new-password">
+      </div>
+
+      <!-- Password requirements -->
+      <div class="requirements">
+        <div class="req-title">Password requirements</div>
+        <div class="req-item" id="req-len">
+          <span class="req-dot"></span> At least 6 characters
+        </div>
+        <div class="req-item" id="req-num">
+          <span class="req-dot"></span> Contains a number
+        </div>
+        <div class="req-item" id="req-upper">
+          <span class="req-dot"></span> Contains an uppercase letter
+        </div>
+      </div>
+
+      <button class="btn btn-full" id="regBtn" onclick="handleRegister()">
+        Create Account
+      </button>
+    </div>
+
+    <!-- Link to login -->
+    <div class="bottom-link">
+      Already have an account? <a href="login.html">Sign in</a>
+    </div>
+
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/register.js"></script>
+</body>
+</html>
