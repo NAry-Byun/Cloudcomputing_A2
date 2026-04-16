@@ -1,19 +1,23 @@
 /* ── main.js ── */
 
 /* ══════════════════════════════════════════════════════
-   BOOT — check login on page load
+   BOOT — no login required to view main page
+   User area and subscription area load only if logged in
 ══════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
-  if (!getUser()) {
-    showLoginModal();
-  } else {
-    bootPage();
-  }
+  bootPage();
 });
 
 function bootPage() {
-  initUserArea();
-  loadSubscriptions();
+  const user = getUser();
+  if (user) {
+    // logged in — show full page
+    initUserArea();
+    loadSubscriptions();
+  } else {
+    // not logged in — show guest state
+    initGuestState();
+  }
 }
 
 /* ══════════════════════════════════════════════════════
@@ -30,54 +34,44 @@ function switchTab(name, btn) {
    LOGOUT — clear session → redirect to login.html
 ══════════════════════════════════════════════════════ */
 function logout() {
+  const user = getUser();
   clearUser();
-  window.location.href = 'login.html';
+  if (user) {
+    // was logged in — redirect to login
+    window.location.href = 'login.html';
+  } else {
+    // already guest — just go to login
+    window.location.href = 'login.html';
+  }
 }
+
+
 
 /* ══════════════════════════════════════════════════════
-   LOGIN MODAL
+   GUEST STATE — shown when not logged in
 ══════════════════════════════════════════════════════ */
-function showLoginModal() {
-  document.getElementById('loginModal').classList.remove('hidden');
-  setTimeout(() => document.getElementById('modalEmail').focus(), 150);
-}
+function initGuestState() {
+  document.getElementById('topUsername').textContent = 'Guest';
+  document.getElementById('userAvatar').textContent       = '?';
+  document.getElementById('userDisplayName').textContent  = 'Not logged in';
+  document.getElementById('userDisplayEmail').textContent = 'Sign in to view your profile';
+  document.getElementById('userDisplayStatus').innerHTML  = '';
+  ['puUsername','puFullName','puEmail','puCreated','puLastLogin'].forEach(id => {
+    document.getElementById(id).textContent = '—';
+  });
+  document.getElementById('puStatus').textContent = '—';
 
-function closeModal() {
-  // user dismissed without logging in → go to login page
-  window.location.href = 'login.html';
-}
-
-async function modalLogin() {
-  const email    = document.getElementById('modalEmail').value.trim();
-  const password = document.getElementById('modalPassword').value;
-
-  clearMsg('modalMsg');
-  if (!email || !password)
-    return showMsg('modalMsg', 'Please fill in all fields.', 'error');
-
-  const btn = document.getElementById('modalLoginBtn');
-  btn.disabled = true;
-  btn.textContent = 'Signing in…';
-
-  try {
-    // GET — Query GSI EmailIndex
-    const { ok, data } = await apiFetch(
-      `/users/by-email?email=${encodeURIComponent(email)}`
-    );
-    if (!ok)                          return showMsg('modalMsg', 'No account found with that email.', 'error');
-    if (data.password_hash !== password) return showMsg('modalMsg', 'Incorrect password.', 'error');
-
-    saveUser(data);
-    document.getElementById('loginModal').classList.add('hidden');
-    bootPage();
-    toast('Welcome back, ' + (data.full_name || data.username) + '!');
-
-  } catch (e) {
-    showMsg('modalMsg', 'Login failed. Check config.js API URL.', 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Sign In';
-  }
+  // subscription area — show sign in prompt
+  document.getElementById('subList').innerHTML = `
+    <div class="empty-state">
+      <div class="empty-icon">🔒</div>
+      <div class="empty-title">Sign in to see your subscriptions</div>
+      <div class="empty-desc">
+        <a href="login.html" style="color:var(--accent);text-decoration:none;font-weight:600;">Sign in</a>
+        &nbsp;or&nbsp;
+        <a href="register.html" style="color:var(--accent);text-decoration:none;font-weight:600;">Create an account</a>
+      </div>
+    </div>`;
 }
 
 /* ══════════════════════════════════════════════════════
