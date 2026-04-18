@@ -21,7 +21,11 @@ I also ran a Python script to download the artist images from the dataset and up
 `Users`, `Music`, and `UserSubscriptions`.
 
 <img width="560" height="460" alt="Screenshot 2026-04-19 at 12 01 55 AM" src="https://github.com/user-attachments/assets/33cc8709-f45f-43bf-b6ff-d4908fa53822" />
+
 This proves the artist images were uploaded successfully to the musicly-images S3 bucket.
+
+
+
 
 <img width="1369" height="564" alt="Screenshot 2026-04-19 at 12 02 10 AM" src="https://github.com/user-attachments/assets/43e89c33-6cc8-4565-9c92-7e77def95abb" />
 This proves the bucket structure was created correctly.
