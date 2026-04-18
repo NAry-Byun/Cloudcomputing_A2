@@ -11,7 +11,6 @@ main page
 
 2. upload frontend file and image script in S3( 2 different S3 bucket need to create)make S3 -> add html file as website
 
-2. Upload frontend files and image script to S3 (two separate S3 buckets) and configure S3 static website hosting
 
 Bushra, for the S3 section:
 
@@ -39,14 +38,17 @@ DynamoDB tables created for the Musicly application, including Users, Music, and
 
 next step is the API/backend connection.
 
-3. set up Dynamo DB and rest API
+
+3. Upload frontend files and image script to S3 (two separate S3 buckets) and configure S3 static website hosting
+
+4. set up Dynamo DB and rest API
 Step 1 — REST API creation-> AWS Console → API Gateway → Create API → REST API → Build
 
 
-4. Ec2 instance - Security Group: HTTP(80), SSH(22)
+5. Ec2 instance - Security Group: HTTP(80), SSH(22)
 
 
-5. CloudFront setting
+6. CloudFront setting
 
 CloudFront → Create Distribution
 Origin domain: Choose S3 bucket
