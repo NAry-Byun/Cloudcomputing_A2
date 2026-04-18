@@ -30,6 +30,13 @@ This proves the artist images were uploaded successfully to the musicly-images S
 <img width="1369" height="564" alt="Screenshot 2026-04-19 at 12 02 10 AM" src="https://github.com/user-attachments/assets/43e89c33-6cc8-4565-9c92-7e77def95abb" />
 This proves the bucket structure was created correctly.
 
+
+
+<img width="2048" height="854" alt="Screenshot 2026-04-19 at 12 17 35 AM" src="https://github.com/user-attachments/assets/c3457071-a18f-47bb-9a16-203e26e36d40" />
+
+
+DynamoDB tables created for the Musicly application, including Users, Music, and UserSubscriptions.
+
 next step is the API/backend connection.
 
 3. set up Dynamo DB and rest API
