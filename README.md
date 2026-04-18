@@ -9,7 +9,7 @@ main page
 4.log out  -> redirect to login page
 
 
-2. upload frontend file and image script in S3( 2 different S3 bucket need to create)
+2. upload frontend file and image script in S3( 2 different S3 bucket need to create)make S3 -> add html file as website
 
 3. set up Dynamo DB and rest API
 Step 1 — REST API creation-> AWS Console → API Gateway → Create API → REST API → Build
@@ -17,7 +17,6 @@ Step 1 — REST API creation-> AWS Console → API Gateway → Create API → RE
 
 4. Ec2 instance - Security Group: HTTP(80), SSH(22)
 
-make S3 -> add html file as website
 
 5. CloudFront setting
 
