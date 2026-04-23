@@ -28,6 +28,7 @@ function switchTab(name, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   btn.classList.add('active');
+  if (name === 'subscription' && getUser()) loadSubscriptions();
 }
 
 /* ══════════════════════════════════════════════════════
@@ -51,6 +52,9 @@ function logout() {
    GUEST STATE — shown when not logged in
 ══════════════════════════════════════════════════════ */
 function initGuestState() {
+  const btn = document.getElementById('authBtn');
+  btn.textContent = 'Log in';
+  btn.onclick = () => { window.location.href = 'login.html'; };
   document.getElementById('topUsername').textContent = 'Guest';
   document.getElementById('userAvatar').textContent       = '?';
   document.getElementById('userDisplayName').textContent  = 'Not logged in';

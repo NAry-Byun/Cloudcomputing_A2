@@ -1,7 +1,7 @@
 /* ── register.js ── */
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (getUser()) window.location.href = 'main.html';
+  if (getUser()) window.location.href = 'index.html';
 
   // live password strength check
   document.getElementById('regPassword')

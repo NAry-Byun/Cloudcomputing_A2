@@ -2,7 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   // redirect if already logged in
-  if (getUser()) window.location.href = 'main.html';
+  if (getUser()) window.location.href = 'index.html';
 
   // allow Enter key on password field
   document.getElementById('loginPassword')
@@ -44,7 +44,7 @@ async function handleLogin() {
     // save to session and go to main
     saveUser(data);
     showMsg('msg', `Welcome back, ${data.full_name || data.username}!`, 'success');
-    setTimeout(() => { window.location.href = 'main.html'; }, 800);
+    setTimeout(() => { window.location.href = 'index.html'; }, 800);
 
   } catch (e) {
     showMsg('msg', 'Login failed. Check your API URL in config.js.', 'error');
