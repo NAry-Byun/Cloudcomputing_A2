@@ -1,6 +1,5 @@
 /* ── config.js — shared API URL and utilities ── */
-
-const API_URL = "https://rj556c0qb9.execute-api.us-east-1.amazonaws.com/musicapi";
+const API_URL = "http://18.212.151.129";
 
 /* ── Auth helpers ── */
 function getUser() {
