@@ -73,11 +73,21 @@ def get_user_by_email(email):
  
  
 def create_user(body):
-    """PutItem with condition — rejects duplicate usernames."""
+    """PutItem with checks — rejects duplicate usernames and duplicate emails."""
     required = {"username", "email", "password_hash", "full_name"}
     missing  = required - body.keys()
     if missing:
         return err(f"Missing fields: {missing}")
+
+    # check duplicate email first
+    existing = users_table.query(
+        IndexName="EmailIndex",
+        KeyConditionExpression=Key("email").eq(body["email"]),
+    ).get("Items", [])
+
+    if existing:
+        return err(f"Email '{body['email']}' already exists.", 409)
+
     try:
         users_table.put_item(
             Item=body,
