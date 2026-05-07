@@ -44,6 +44,18 @@ def ensure_bucket_exists():
             )
         print("Bucket created.")
 
+    # enforce private access — objects served via pre-signed URLs only
+    s3.put_public_access_block(
+        Bucket=BUCKET_NAME,
+        PublicAccessBlockConfiguration={
+            "BlockPublicAcls":       True,
+            "IgnorePublicAcls":      True,
+            "BlockPublicPolicy":     True,
+            "RestrictPublicBuckets": True,
+        },
+    )
+    print(f"Bucket '{BUCKET_NAME}' is private (pre-signed URLs required).")
+
 def make_s3_url(bucket, region, key):
     return f"https://{bucket}.s3.{region}.amazonaws.com/{key}"
 

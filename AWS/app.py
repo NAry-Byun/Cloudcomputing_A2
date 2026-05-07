@@ -20,6 +20,10 @@ def forward_to_lambda(resource, path_params=None):
         mimetype="application/json",
     )
 
+@app.route("/", methods=["GET"])
+def root():
+    return Response('{"status":"ok"}', status=200, mimetype="application/json")
+
 @app.route("/health", methods=["GET"])
 def health():
     return Response('{"status":"ok"}', status=200, mimetype="application/json")
@@ -59,4 +63,4 @@ def subscription_by_key(username, title_album):
     )
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=False)
+    app.run(host="0.0.0.0", port=80, debug=False)

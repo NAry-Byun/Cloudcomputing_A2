@@ -3,65 +3,81 @@ import os
 import boto3
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
- 
-# ── Config ────────────────────────────────────────────────────────────────────
+
 REGION       = os.environ.get("AWS_REGION",        "us-east-1")
 ENDPOINT_URL = os.environ.get("DYNAMODB_ENDPOINT", None)
- 
+S3_BUCKET    = os.environ.get("S3_BUCKET",         "musicly-images-nary2026")
+
 _kw = dict(region_name=REGION)
 if ENDPOINT_URL:
     _kw["endpoint_url"] = ENDPOINT_URL
- 
-dynamodb       = boto3.resource("dynamodb", **_kw)
-users_table    = dynamodb.Table("Users")
-music_table    = dynamodb.Table("Music")
-sub_table      = dynamodb.Table("UserSubscriptions")   # ← NEW
- 
- 
-# ── CORS + response helpers ───────────────────────────────────────────────────
+
+dynamodb    = boto3.resource("dynamodb", **_kw)
+users_table = dynamodb.Table("Users")
+music_table = dynamodb.Table("Music")
+sub_table   = dynamodb.Table("UserSubscriptions")
+s3_client   = boto3.client("s3", region_name=REGION)
+
 CORS_HEADERS = {
-    "Content-Type":                     "application/json",
-    "Access-Control-Allow-Origin":      "*",
-    "Access-Control-Allow-Methods":     "GET,POST,DELETE,OPTIONS",
-    "Access-Control-Allow-Headers":     "Content-Type,Authorization",
+    "Content-Type":                 "application/json",
+    "Access-Control-Allow-Origin":  "*",
+    "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type,Authorization",
 }
- 
+
 def ok(body, status=200):
     return {
         "statusCode": status,
         "headers":    CORS_HEADERS,
         "body":       json.dumps(body, default=str),
     }
- 
+
 def err(msg, status=400):
     return ok({"error": msg}, status)
- 
- 
-# ══════════════════════════════════════════════════════════════════════════════
-# USERS
-# ══════════════════════════════════════════════════════════════════════════════
- 
+
+
+def presign_url(img_url, expires=3600):
+    if not img_url:
+        return ""
+    try:
+        if ".amazonaws.com/" in img_url:
+            key = img_url.split(".amazonaws.com/", 1)[-1].split("?")[0]
+        else:
+            key = img_url.split("?")[0]
+        return s3_client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": S3_BUCKET, "Key": key},
+            ExpiresIn=expires,
+        )
+    except Exception:
+        return img_url
+
+
+def with_presigned(songs):
+    for s in songs:
+        if s.get("img_url"):
+            s["img_url"] = presign_url(s["img_url"])
+    return songs
+
+
 def get_all_users():
-    """Scan — returns all users (small table, 10 rows)."""
     resp  = users_table.scan()
     items = resp.get("Items", [])
     while "LastEvaluatedKey" in resp:
         resp   = users_table.scan(ExclusiveStartKey=resp["LastEvaluatedKey"])
         items += resp.get("Items", [])
     return ok({"users": items, "count": len(items)})
- 
- 
+
+
 def get_user_by_username(username):
-    """GetItem by PK — O(1)."""
     resp = users_table.get_item(Key={"username": username})
     item = resp.get("Item")
     if not item:
         return err(f"User '{username}' not found.", 404)
     return ok(item)
- 
- 
+
+
 def get_user_by_email(email):
-    """Query GSI EmailIndex — login by email without a Scan."""
     resp  = users_table.query(
         IndexName="EmailIndex",
         KeyConditionExpression=Key("email").eq(email),
@@ -70,23 +86,21 @@ def get_user_by_email(email):
     if not items:
         return err(f"No user found with email '{email}'.", 404)
     return ok(items[0])
- 
- 
+
+
 def create_user(body):
-    """PutItem with checks — rejects duplicate usernames and duplicate emails."""
     required = {"username", "email", "password_hash", "full_name"}
     missing  = required - body.keys()
     if missing:
         return err(f"Missing fields: {missing}")
 
-    # check duplicate email first
     existing = users_table.query(
         IndexName="EmailIndex",
         KeyConditionExpression=Key("email").eq(body["email"]),
     ).get("Items", [])
 
     if existing:
-        return err(f"Email '{body['email']}' already exists.", 409)
+        return err("The email already exists", 409)
 
     try:
         users_table.put_item(
@@ -98,10 +112,9 @@ def create_user(body):
         if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
             return err(f"Username '{body['username']}' already exists.", 409)
         raise
- 
- 
+
+
 def delete_user(username):
-    """DeleteItem — returns 404 when user not found."""
     resp = users_table.delete_item(
         Key={"username": username},
         ReturnValues="ALL_OLD",
@@ -109,73 +122,59 @@ def delete_user(username):
     if not resp.get("Attributes"):
         return err(f"User '{username}' not found.", 404)
     return ok({"message": f"User '{username}' deleted."})
- 
- 
-# ══════════════════════════════════════════════════════════════════════════════
-# MUSIC
-# ══════════════════════════════════════════════════════════════════════════════
- 
+
+
 def get_songs(params):
-    """
-    Dispatch to the right DynamoDB operation based on query params.
-    artist + year  → LSI  ArtistYearIndex
-    album          → GSI  AlbumIndex
-    year           → GSI  YearIndex
-    artist         → Query base table
-    (none)         → Scan
-    """
     artist = params.get("artist")
     album  = params.get("album")
     year   = params.get("year")
- 
+
     if artist and year:
-        resp = music_table.query(
+        resp  = music_table.query(
             IndexName="ArtistYearIndex",
             KeyConditionExpression=Key("artist").eq(artist) & Key("year").eq(year),
         )
-        return ok({"songs": resp.get("Items", []), "source": "LSI:ArtistYearIndex"})
- 
+        return ok({"songs": with_presigned(resp.get("Items", [])), "source": "LSI:ArtistYearIndex"})
+
     if artist:
-        resp = music_table.query(
+        resp  = music_table.query(
             KeyConditionExpression=Key("artist").eq(artist),
         )
-        return ok({"songs": resp.get("Items", []), "source": "base_table:artist"})
- 
+        return ok({"songs": with_presigned(resp.get("Items", [])), "source": "base_table:artist"})
+
     if album:
-        resp = music_table.query(
+        resp  = music_table.query(
             IndexName="AlbumIndex",
             KeyConditionExpression=Key("album").eq(album),
         )
-        return ok({"songs": resp.get("Items", []), "source": "GSI:AlbumIndex"})
- 
+        return ok({"songs": with_presigned(resp.get("Items", [])), "source": "GSI:AlbumIndex"})
+
     if year:
-        resp = music_table.query(
+        resp  = music_table.query(
             IndexName="YearIndex",
             KeyConditionExpression=Key("year").eq(year),
         )
-        return ok({"songs": resp.get("Items", []), "source": "GSI:YearIndex"})
- 
-    # full Scan — no filters
+        return ok({"songs": with_presigned(resp.get("Items", [])), "source": "GSI:YearIndex"})
+
     items = []
     resp  = music_table.scan()
     items += resp.get("Items", [])
     while "LastEvaluatedKey" in resp:
         resp   = music_table.scan(ExclusiveStartKey=resp["LastEvaluatedKey"])
         items += resp.get("Items", [])
-    return ok({"songs": items, "count": len(items), "source": "scan:all"})
- 
- 
+    return ok({"songs": with_presigned(items), "count": len(items), "source": "scan:all"})
+
+
 def get_song(artist, title_album):
-    """GetItem by full PK+SK."""
     resp = music_table.get_item(Key={"artist": artist, "title_album": title_album})
     item = resp.get("Item")
     if not item:
-        return err(f"Song not found.", 404)
+        return err("Song not found.", 404)
+    with_presigned([item])
     return ok(item)
- 
- 
+
+
 def create_song(body):
-    """PutItem — prevents overwrite with condition expression."""
     required = {"artist", "title", "album"}
     missing  = required - body.keys()
     if missing:
@@ -192,83 +191,60 @@ def create_song(body):
         if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
             return err("Song already exists.", 409)
         raise
- 
- 
+
+
 def delete_song(artist, title_album):
-    """DeleteItem by PK+SK."""
     resp = music_table.delete_item(
         Key={"artist": artist, "title_album": title_album},
         ReturnValues="ALL_OLD",
     )
     if not resp.get("Attributes"):
         return err("Song not found.", 404)
-    return ok({"message": f"Song deleted."})
- 
- 
-# ══════════════════════════════════════════════════════════════════════════════
-# SUBSCRIPTIONS  ← NEW
-# ══════════════════════════════════════════════════════════════════════════════
-#
-# Table: UserSubscriptions
-#   PK  username    (String)  — which user subscribed
-#   SK  title_album (String)  — which song ("title#album")
-#
-# One user can subscribe to many songs.
-# One song can be subscribed by many users.
-# Querying by username returns exactly that user's list — no Scan needed.
- 
+    return ok({"message": "Song deleted."})
+
+
 def get_subscriptions(username):
-    """
-    GET /subscriptions?username=alice
-    Query by PK (username) — returns only this user's subscriptions.
-    New users return an empty list — never an error.
-    """
     if not username:
         return err("Query parameter 'username' is required.")
- 
+
     resp  = sub_table.query(
         KeyConditionExpression=Key("username").eq(username),
     )
     items = resp.get("Items", [])
- 
-    # paginate if needed (rare but correct)
+
     while "LastEvaluatedKey" in resp:
         resp   = sub_table.query(
             KeyConditionExpression=Key("username").eq(username),
             ExclusiveStartKey=resp["LastEvaluatedKey"],
         )
         items += resp.get("Items", [])
- 
-    return ok({"subscriptions": items, "count": len(items)})
- 
- 
+
+    for item in items:
+        if not item.get("img_url") and item.get("artist") and item.get("title_album"):
+            music_resp = music_table.get_item(
+                Key={"artist": item["artist"], "title_album": item["title_album"]}
+            )
+            music_item = music_resp.get("Item", {})
+            if music_item.get("img_url"):
+                item["img_url"] = music_item["img_url"]
+
+    return ok({"subscriptions": with_presigned(items), "count": len(items)})
+
+
 def create_subscription(body):
-    """
-    POST /subscriptions
-    PutItem — saves a song subscription for a user.
-    If the user subscribes to the same song twice, it is silently overwritten
-    (idempotent — safe to call multiple times).
- 
-    Required fields: username, title_album
-    Optional extras: title, artist, album, year, img_url
-    """
     required = {"username", "title_album"}
     missing  = required - body.keys()
     if missing:
         return err(f"Missing fields: {missing}")
- 
+
+    if body.get("img_url") and ("X-Amz-Signature" in body["img_url"] or "AWSAccessKeyId" in body["img_url"]):
+        body["img_url"] = body["img_url"].split("?")[0]
+
     sub_table.put_item(Item=body)
-    return ok({
-        "message": f"Subscribed to '{body.get('title', body['title_album'])}'."
-    }, 201)
- 
- 
+    return ok({"message": f"Subscribed to '{body.get('title', body['title_album'])}'."}, 201)
+
+
 def delete_subscription(username, title_album):
-    """
-    DELETE /subscriptions/{username}/{title_album}
-    DeleteItem — removes the subscription for this user+song pair.
-    Returns 404 if the subscription didn't exist.
-    """
     resp = sub_table.delete_item(
         Key={"username": username, "title_album": title_album},
         ReturnValues="ALL_OLD",
@@ -276,64 +252,58 @@ def delete_subscription(username, title_album):
     if not resp.get("Attributes"):
         return err("Subscription not found.", 404)
     return ok({"message": "Subscription removed."})
- 
- 
-# ══════════════════════════════════════════════════════════════════════════════
-# LAMBDA ENTRY POINT
-# ══════════════════════════════════════════════════════════════════════════════
- 
+
+
 def lambda_handler(event, context):
+    from urllib.parse import unquote
     method      = event.get("httpMethod", "GET").upper()
     resource    = event.get("resource", "")
-    path_params = event.get("pathParameters") or {}
+    raw_params  = event.get("pathParameters") or {}
+    path_params = {k: unquote(v) for k, v in raw_params.items()}
     qs_params   = event.get("queryStringParameters") or {}
     body_raw    = event.get("body") or "{}"
- 
-    # handle CORS preflight for all routes
+
     if method == "OPTIONS":
         return ok({})
- 
+
     try:
         body = json.loads(body_raw) if body_raw else {}
     except json.JSONDecodeError:
         return err("Invalid JSON body.", 400)
- 
-    # ── /users ────────────────────────────────────────────────────────────────
+
     if resource == "/users":
         if method == "GET":   return get_all_users()
         if method == "POST":  return create_user(body)
- 
+
     if resource == "/users/by-email":
         if method == "GET":
             return get_user_by_email(qs_params.get("email", ""))
- 
+
     if resource == "/users/{username}":
         username = path_params.get("username", "")
         if method == "GET":    return get_user_by_username(username)
         if method == "DELETE": return delete_user(username)
- 
-    # ── /songs ────────────────────────────────────────────────────────────────
+
     if resource == "/songs":
         if method == "GET":  return get_songs(qs_params)
         if method == "POST": return create_song(body)
- 
+
     if resource == "/songs/{artist}/{title_album}":
         artist      = path_params.get("artist", "")
         title_album = path_params.get("title_album", "")
         if method == "GET":    return get_song(artist, title_album)
         if method == "DELETE": return delete_song(artist, title_album)
- 
-    # ── /subscriptions ────────────────────────────────────────────────────────
+
     if resource == "/subscriptions":
         if method == "GET":
             return get_subscriptions(qs_params.get("username", ""))
         if method == "POST":
             return create_subscription(body)
- 
+
     if resource == "/subscriptions/{username}/{title_album}":
         username    = path_params.get("username", "")
         title_album = path_params.get("title_album", "")
         if method == "DELETE":
             return delete_subscription(username, title_album)
- 
+
     return err(f"No handler for {method} {resource}", 404)
